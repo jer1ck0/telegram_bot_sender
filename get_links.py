@@ -12,7 +12,7 @@ class db_connect:
     def __init__(self, dbname):
         self.dbname = dbname
 
-    def __enter__(self):
+    def __enter__(self): 
         self.conn = sqlite3.connect(self.dbname)
         logging.debug("Succesfull connect to DB")
         return self.conn
@@ -64,7 +64,7 @@ def posting_to_chat():
             link = a[1]
             bot = telebot.TeleBot(TG_TOKEN)
             try:
-                bot.send_animation(-1001457583348,link)
+                bot.send_animation(TARGETCHAT,link)
                 logging.debug ("{} posted to chat".format(id))
             except telebot.apihelper.ApiTelegramException:
                 logging.debug ("Houston we have a problem")
@@ -74,14 +74,13 @@ def posting_to_chat():
             pass
 
 if __name__ == "__main__":
-    temp_count = 0   
-    post_wall_grabber(DATABASE)
-    while True:
-        if temp_count != 30:
+    with db_connect(DATABASE) as connct:
+        cursor = connct.cursor()
+        base_count = cursor.execute("SELECT * FROM items WHERE posted=0;").fetchall()
+        print(len(base_count))
+        if base_count != 0:
             posting_to_chat()
-            time.sleep(3600)
-            temp_count += 1
         else:
-            logging.debug ("Need fresh posts")
             post_wall_grabber(DATABASE)
-            temp_count = 0
+            posting_to_chat()            
+
