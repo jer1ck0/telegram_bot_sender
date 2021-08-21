@@ -42,7 +42,7 @@ def post_wall_grabber(db):
             pass
         for each in data:
             postrate = each['likes']['count'] / each['views']['count'] * 100
-            if postrate > 2.5:
+            if postrate > 0.5:
                 postid = each['id']
                 postname = "img/" + str(each['id']) + '.gif'
                 posturl = each['attachments'][0]['doc']['url']
@@ -66,8 +66,8 @@ def posting_to_chat():
             try:
                 bot.send_animation(TARGETCHAT,link)
                 logging.debug ("{} posted to chat".format(id))
-            except telebot.apihelper.ApiTelegramException:
-                logging.debug ("Houston we have a problem")
+            except Exception as wtf:
+                logging.debug ("Houston we have a problem {}".format(wtf))
                 pass
             cursor.execute('UPDATE items SET posted = 1 WHERE id = (?)', (id,))
         else:
@@ -77,8 +77,7 @@ if __name__ == "__main__":
     with db_connect(DATABASE) as connct:
         cursor = connct.cursor()
         base_count = cursor.execute("SELECT * FROM items WHERE posted=0;").fetchall()
-        print(len(base_count))
-        if base_count != 0:
+        if len(base_count) != 0:
             posting_to_chat()
         else:
             post_wall_grabber(DATABASE)
